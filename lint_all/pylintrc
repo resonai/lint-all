@@ -51,7 +51,7 @@ max-attributes=20
 max-branches=20
 max-statements=100
 
-[SPELLING]
-max-spelling-suggestions=4
-spelling-dict=en_US
-spelling-ignore-words=Avi,Glatstein,Resonai,Eyal,Shir,David,Rotem,Dana,Yoav,Shai,Oren,Ran,Ami,Tomer,Tzachi,realestate,grpc
+# [SPELLING]
+# max-spelling-suggestions=4
+# spelling-dict=en_US
+# spelling-ignore-words=Avi,Glatstein,Resonai,Eyal,Shir,David,Rotem,Dana,Yoav,Shai,Oren,Ran,Ami,Tomer,Tzachi,realestate,grpc

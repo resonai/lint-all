@@ -2,7 +2,7 @@
   cmd:
     - "mypy"
     - "--config-file"
-    - "scripts/mypy.ini"
+    - "mypy.ini"
   extensions:
     - ".py"
   ignored_issues:
@@ -12,14 +12,14 @@
   cmd:
     - "pylint"
     - "--rcfile"
-    - "scripts/lint/pylintrc"
+    - "pylintrc"
   extensions:
     - ".py"
 - name: "pylint_permissive"
   cmd:
     - "pylint"
     - "--rcfile"
-    - "scripts/lint/pylintrc_permissive"
+    - "pylintrc_permissive"
   extensions:
     - ".py"
   run_by_default: false
@@ -38,7 +38,7 @@
 - name: "helmlint"
   cmd:
     - "python3"
-    - "./scripts/lint/helm_lint.py"
+    - "helm_lint.py"
   extensions:
     - ".yaml"
   use_stderr: true

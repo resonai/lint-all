@@ -1,6 +1,10 @@
 from setuptools import setup
 
 setup(
+    include_package_data=True,
+    package_data={
+        "lint_all": ["all_linters.yaml", "mypy.ini", "pylintrc", "pylintrc_permissive"],
+    },
     entry_points={
         "console_scripts": ["lint_all=lint_all.lint_all:parse_args_and_run"],
     },

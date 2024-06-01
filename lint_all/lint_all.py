@@ -13,6 +13,9 @@ from dataclasses import dataclass, field
 from os import path
 from subprocess import PIPE, run
 
+import importlib.resources as pkg_resources
+from lint_all import __name__ as pkg_name
+
 import gitdb
 import yaml
 from git import Repo
@@ -48,7 +51,7 @@ class Linter:
 
 def load_linters(filename: str) -> list[Linter]:
     parsed_linters = []
-    with open(filename, "r", encoding="utf-8") as stream:
+    with pkg_resources.open_text(pkg_name, "all_linters.yaml") as stream:
         try:
             parsed_yaml = yaml.safe_load(stream)
             if not parsed_yaml:
@@ -171,12 +174,14 @@ def extract_issues_from_linter_output(
     Run linter command and extract stdout or stderr lines that begin with the file
     name.
     """
+    print(f'Running command: {cmd=} on {file_name=} with {env=} and {use_stderr=}...')
     output = (
         run(cmd + [file_name], stdout=PIPE, stderr=PIPE, check=False, env=env)
         if env
         else run(cmd + [file_name], stdout=PIPE, stderr=PIPE, check=False)
     )
     output_txt = output.stderr if use_stderr else output.stdout
+    print(f'Output: {output_txt.decode('utf-8')=}')
     return [l for l in output_txt.decode("utf-8").splitlines() if l.startswith(file_name)]
 
 
@@ -355,9 +360,11 @@ def main(linters: list[Linter]):
             new_to_old: list[int] = []
             old_to_new: list[int] = []
             if not GLOBAL_FLAGS.report_old_issues:
+                print("mapping line numbers...")
                 old_to_new, new_to_old = map_line_numbers(fname, repo)
             for linter in linters:
                 if fname.endswith(tuple(linter.extensions)):
+                    print(f"{YELLOW}Running {linter.name} on {fname}...{ENDC}")
                     extend_both(issues, lint_file(fname, tmp_dir, new_to_old, old_to_new, linter))
             err_count += len(issues[1])
             fixed_count += len(issues[0])
@@ -413,28 +420,28 @@ def parse_args_and_run() -> None:
         help="YAML configurtaion of all linters that may be used",
     )
     initial_flags = parser.parse_known_args()[0]
-    all_linters = load_linters(initial_flags.linters_config)
-    if not all_linters:
+    all_linters_parsed = load_linters(initial_flags.linters_config)
+    if not all_linters_parsed:
         raise ValueError("No linters found")
-    for linter in all_linters:
+    for linter in all_linters_parsed:
         add_bool_flag(cli_parser=parser, flag_name=linter.name, default_val=True, help_str=f"Run {linter.name}")
     parser.add_argument(
         "--ref_branch",
         type=str,
         default="origin/main",
-        help="Reference branch against which the current branch " "is compared",
+        help="Reference branch against which the current branch is compared",
     )
     add_bool_flag(
         cli_parser=parser,
         flag_name="check_all_files",
         default_val=False,
-        help_str="Run with all files. If false, runs only on diff " "from ref_branch",
+        help_str="Run with all files. If false, runs only on diff from ref_branch",
     )
     add_bool_flag(
         cli_parser=parser,
         flag_name="report_old_issues",
         default_val=False,
-        help_str="Also include old issues in the report (if not set " "- ignores old issues).",
+        help_str="Also include old issues in the report (if not set - ignores old issues).",
     )
     add_bool_flag(
         cli_parser=parser,
@@ -450,5 +457,5 @@ def parse_args_and_run() -> None:
     )
     global GLOBAL_FLAGS
     GLOBAL_FLAGS = parser.parse_args()
-    used_linters = [linter for linter in all_linters if vars(GLOBAL_FLAGS)[linter.name]]
+    used_linters = [linter for linter in all_linters_parsed if vars(GLOBAL_FLAGS)[linter.name]]
     main(used_linters)
