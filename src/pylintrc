@@ -1,0 +1,57 @@
+[MASTER]
+#load-plugins=pylint_plugins.unicode_literals_checker
+# TODO(itamar): fix plugin and reenable it (should respect import groups rules-
+# stdlib, third party, project)
+# ,pylint_plugins.import_order
+ignore=migrations
+load-plugins=scripts.lint.default_rng_linter
+
+[MESSAGES CONTROL]
+# W0142 (star-args): Used * or ** magic (I'm using * and ** for unpacking, and I like it)
+disable=abstract-class-not-used,
+  bare-except,
+  fixme,
+  import-error,
+  locally-disabled,
+  maybe-no-member,
+  missing-class-docstring,
+  missing-function-docstring,
+  missing-module-docstring,
+  no-init,
+  no-member,
+  no-name-in-module,
+  relative-import,
+  star-args,
+  super-on-old-class,
+  too-few-public-methods,
+  too-many-public-methods,
+  too-many-arguments,
+enable=spelling
+
+[FORMAT]
+indent-string='  '
+docstring-min-length=4
+dummy-variables-rgx=_$|dummy|unused
+class-rgx=[A-Z_][a-zA-Z0-9]{2,50}$
+module-rgx=[a-z_][a-z0-9_]{2,50}$
+const-rgx=([A-Z_][A-Z0-9_]{2,50})|(__.{1,50}__)$
+function-rgx=[a-z_][a-z0-9_]{2,50}$
+method-rgx=[a-z_][a-z0-9_]{2,50}$
+attr-rgx=[a-z_][a-z0-9_]{2,50}$
+argument-rgx=[a-z_][a-z0-9_]{2,50}$
+variable-rgx=[a-z_][a-z0-9_]{2,50}$
+class-attribute-rgx=([A-Za-z_][A-Za-z0-9_]{2,50}|(__.*__))$
+good-names=f,i,j,k,ex,Run,_,logger,rc,sr,RDL
+bad-functions=apply,input,file
+max-line-length=80
+
+[DESIGN]
+max-locals=30
+max-attributes=20
+max-branches=20
+max-statements=100
+
+[SPELLING]
+max-spelling-suggestions=4
+spelling-dict=en_US
+spelling-ignore-words=Avi,Glatstein,Resonai,Eyal,Shir,David,Rotem,Dana,Yoav,Shai,Oren,Ran,Ami,Tomer,Tzachi,realestate,grpc
