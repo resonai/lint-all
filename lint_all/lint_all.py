@@ -424,7 +424,7 @@ def parse_args_and_run() -> None:
     if not all_linters_parsed:
         raise ValueError("No linters found")
     for linter in all_linters_parsed:
-        add_bool_flag(cli_parser=parser, flag_name=linter.name, default_val=True, help_str=f"Run {linter.name}")
+        add_bool_flag(cli_parser=parser, flag_name=linter.name, default_val=linter.run_by_default, help_str=f"Run {linter.name}")
     parser.add_argument(
         "--ref_branch",
         type=str,
