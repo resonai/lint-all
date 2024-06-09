@@ -4,12 +4,10 @@
 # stdlib, third party, project)
 # ,pylint_plugins.import_order
 ignore=migrations
-load-plugins=scripts.lint.default_rng_linter
+load-plugins=default_rng_linter
 
 [MESSAGES CONTROL]
-# W0142 (star-args): Used * or ** magic (I'm using * and ** for unpacking, and I like it)
-disable=abstract-class-not-used,
-  bare-except,
+disable=bare-except,
   fixme,
   import-error,
   locally-disabled,
@@ -17,12 +15,8 @@ disable=abstract-class-not-used,
   missing-class-docstring,
   missing-function-docstring,
   missing-module-docstring,
-  no-init,
   no-member,
   no-name-in-module,
-  relative-import,
-  star-args,
-  super-on-old-class,
   too-few-public-methods,
   too-many-public-methods,
   too-many-arguments,
@@ -42,7 +36,6 @@ argument-rgx=[a-z_][a-z0-9_]{2,50}$
 variable-rgx=[a-z_][a-z0-9_]{2,50}$
 class-attribute-rgx=([A-Za-z_][A-Za-z0-9_]{2,50}|(__.*__))$
 good-names=f,i,j,k,ex,Run,_,logger,rc,sr,RDL
-bad-functions=apply,input,file
 max-line-length=80
 
 [DESIGN]

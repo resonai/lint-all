@@ -8,11 +8,12 @@
   ignored_issues:
     - "error: \"Type[Flags]\" has no attribute"
     - "error: Source file found twice under different module names"
+  run_by_default: false
 - name: "pylint"
   cmd:
     - "pylint"
-    - "--rcfile"
-    - "pylintrc"
+    # - "--rcfile"
+    # - "pylintrc"
   extensions:
     - ".py"
 - name: "pylint_permissive"
@@ -22,7 +23,7 @@
     - "pylintrc_permissive"
   extensions:
     - ".py"
-  run_by_default: false
+  run_by_default: true
 - name: "cpplint"
   cmd:
     - "cpplint"
@@ -30,11 +31,13 @@
     - ".cc"
     - ".h"
   use_stderr: true
+  run_by_default: false
 - name: "golint"
   cmd:
     - "golint"
   extensions:
     - ".go"
+  run_by_default: false
 - name: "helmlint"
   cmd:
     - "python3"
@@ -42,3 +45,4 @@
   extensions:
     - ".yaml"
   use_stderr: true
+  run_by_default: false

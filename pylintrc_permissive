@@ -1,6 +1,6 @@
 
 [MASTER]
-load-plugins=scripts.lint.default_rng_linter
+load-plugins=default_rng_linter
 ignore=migrations
 
 [MESSAGES CONTROL]
