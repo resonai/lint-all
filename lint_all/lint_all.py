@@ -384,19 +384,6 @@ def add_bool_flag(cli_parser: argparse.ArgumentParser, flag_name: str, default_v
 
 def parse_args_and_run() -> None:
   parser = argparse.ArgumentParser(description="Multilinter")
-
-  parser.add_argument(
-    "--linters_config",
-    type=str,
-    default="lint_all/all_linters.yaml",
-    help="YAML configurtaion of all linters that may be used",
-  )
-  initial_flags = parser.parse_known_args()[0]
-  all_linters_parsed = load_linters(initial_flags.linters_config)
-  if not all_linters_parsed:
-    raise ValueError("No linters found")
-  for linter in all_linters_parsed:
-    add_bool_flag(cli_parser=parser, flag_name=linter.name, default_val=linter.run_by_default, help_str=f"Run {linter.name}")
   parser.add_argument(
     "--ref_branch",
     type=str,
@@ -427,6 +414,19 @@ def parse_args_and_run() -> None:
     default_val=False,
     help_str="Also pull lfs files from git. Requires installing git-lfs",
   )
+
+  parser.add_argument(
+    "--linters_config",
+    type=str,
+    default="lint_all/all_linters.yaml",
+    help="YAML configurtaion of all linters that may be used",
+  )
+  initial_flags = parser.parse_known_args()[0]
+  all_linters_parsed = load_linters(initial_flags.linters_config)
+  if not all_linters_parsed:
+    raise ValueError("No linters found")
+  for linter in all_linters_parsed:
+    add_bool_flag(cli_parser=parser, flag_name=linter.name, default_val=linter.run_by_default, help_str=f"Run {linter.name}")
   global GLOBAL_FLAGS
   GLOBAL_FLAGS = parser.parse_args()
   used_linters = [linter for linter in all_linters_parsed if vars(GLOBAL_FLAGS)[linter.name]]
