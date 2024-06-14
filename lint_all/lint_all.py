@@ -4,22 +4,20 @@
 """
 Run linters on the diff from git
 """
-import lint_all
 import argparse
+import importlib.resources as pkg_resources
 import re
 import sys
 import tempfile
 from dataclasses import dataclass, field
 from os import path
-from subprocess import PIPE, run, check_output
-from numpy.random import default_rng
-
-import importlib.resources as pkg_resources
-from lint_all import __name__ as pkg_name
+from subprocess import PIPE, check_output, run
 
 import gitdb
 import yaml
 from git import Repo
+
+from lint_all import __name__ as pkg_name
 
 WHITE = "\u001b[97;1m"
 YELLOW = "\u001b[93;1m"
@@ -335,7 +333,6 @@ def main(linters: list[Linter]):
       new_to_old: list[int] = []
       old_to_new: list[int] = []
       if not GLOBAL_FLAGS.report_old_issues:
-        print("mapping line numbers...")
         old_to_new, new_to_old = map_line_numbers(fname, repo)
       for linter in linters:
         if fname.endswith(tuple(linter.extensions)):

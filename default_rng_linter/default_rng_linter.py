@@ -1,5 +1,5 @@
 from astroid import nodes
-from typing import TYPE_CHECKING, Optional
+from typing import TYPE_CHECKING
 
 from pylint.checkers import BaseChecker
 
@@ -38,5 +38,3 @@ class DefaultRNGUnseededChecker(BaseChecker):
 
 def register(linter: "PyLinter") -> None:
   linter.register_checker(DefaultRNGUnseededChecker(linter))
-
-print('Installed default_rng_linter!')
