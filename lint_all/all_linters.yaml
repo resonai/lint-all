@@ -23,7 +23,7 @@
     - "pylintrc_permissive"
   extensions:
     - ".py"
-  run_by_default: true
+  run_by_default: false
 - name: "cpplint"
   cmd:
     - "cpplint"

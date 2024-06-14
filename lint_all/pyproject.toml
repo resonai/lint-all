@@ -3,19 +3,8 @@ name = "lint_all"
 version = "0.1.0"
 description = "A meta linter to run all linters"
 dependencies = [
-#        "cpplint",
         "gitdb",
         "GitPython",
-        "mypy",
-        "pyenchant",
-#        "pylint",
-        "types-mock",
-#       "types-protobuf",
-#        "types-redis",
-#        "types-requests",
-#        "types-setuptools",
-#        "types-six",
-#        "types-pyyaml",
         "pyyaml",]
 requires-python = ">=3.8"
 readme = "README.md"
