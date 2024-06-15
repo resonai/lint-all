@@ -23,6 +23,7 @@ WHITE = "\u001b[97;1m"
 YELLOW = "\u001b[93;1m"
 RED = "\u001b[91;1m"
 GREEN = "\u001b[92;1m"
+CYAN = "\u001b[96;1m"
 ENDC = "\u001b[0m"
 
 REQUIRED_PIP = (
@@ -32,8 +33,6 @@ REQUIRED_PIP = (
 )
 
 MYPY_IGNORE = ['error: "Type[Flags]" has no attribute', "error: Source file found twice under different module names"]
-
-EXCLUDE_FOLDERS = ("yapi/uploader/lib", "ansible")
 
 GLOBAL_FLAGS = argparse.Namespace()
 
@@ -46,11 +45,12 @@ class Linter:
   use_stderr: bool = False
   run_by_default: bool = True
   ignored_issues: list[str] = field(default_factory=list)
+  excluded_paths: list[str] = field(default_factory=list)
 
 
 def load_linters(filename: str) -> list[Linter]:
   parsed_linters = []
-  with pkg_resources.open_text(pkg_name, "all_linters.yaml") as stream:
+  with open(filename) as stream:
     try:
       parsed_yaml = yaml.safe_load(stream)
       if not parsed_yaml:
@@ -262,19 +262,19 @@ def cleanup(repo: Repo, tmp_dir: str) -> None:
       print(f"Something went wrong in cleanup: {exc}")
 
 
-def filter_types_and_folders(linters: list[Linter], file_list: list[str]) -> list[str]:
+def filter_types_and_folders(linters: list[Linter], file_list: list[str], base_path: str) -> list[str]:
   files = []
   for fname in file_list:
-    if not fname.startswith(EXCLUDE_FOLDERS):
-      should_append = False
+    should_append = False
+    if fname.startswith(base_path):
       for linter in linters:
-        should_append |= fname.endswith(tuple(linter.extensions))
+        should_append |= fname.endswith(tuple(linter.extensions)) and not fname.startswith(tuple(linter.excluded_paths))
       if should_append:
         files.append(fname)
   return files
 
 
-def main(linters: list[Linter]):
+def main(linters: list[Linter], base_path: str):
   """
   Meta linter main entry point
   """
@@ -292,7 +292,7 @@ def main(linters: list[Linter]):
           print(f"{YELLOW}You have uncommitted changes to tracked files.\n" f"{ENDC}")
         changed_files = list(set(changed_files + modified))
       changed_files = [x for x in changed_files if git_exists(repo, repo.head.object.hexsha, x)]
-    changed_files = sorted(filter_types_and_folders(linters, changed_files))
+    changed_files = sorted(filter_types_and_folders(linters, changed_files, base_path))
   except gitdb.exc.BadName:
     print(f"{RED}Branch {GLOBAL_FLAGS.ref_branch} not found{ENDC}")
     cleanup(repo, "")  # This does nothing. Left here for future cleanups.
@@ -317,7 +317,7 @@ def main(linters: list[Linter]):
       if GLOBAL_FLAGS.use_git_lfs:
         print(f"Init lfs in reference directory at {tmp_dir}...")
         run(["git", "lfs", "install", "--skip-smudge"], cwd=tmp_dir, check=False)
-      print(f"Creating reference worktree at {tmp_dir}...")
+      print(f"{CYAN}Creating reference worktree at {tmp_dir}...{ENDC}")
       repo.git.worktree("add", "--detach", tmp_dir, GLOBAL_FLAGS.ref_branch)
       if GLOBAL_FLAGS.use_git_lfs:
         print("Pulling lfs")
@@ -357,7 +357,7 @@ def main(linters: list[Linter]):
         print(f"{len(issues[0])} issues fixed")
     # Make cleaneup withstand exceptions etc
     if not GLOBAL_FLAGS.report_old_issues:
-      print(f"Removing reference worktree at {tmp_dir}...")
+      print(f"{CYAN}Removing reference worktree at {tmp_dir}...{ENDC}")
       repo.git.worktree("remove", "--force", tmp_dir)
     print(f"\n{WHITE}Summary: analyzed {len(changed_files)} files:\n" f"{ENDC}{chr(10).join(changed_files)}")
     exit_err = 0  # for future use when used in CI/CD pipeline
@@ -384,6 +384,13 @@ def add_bool_flag(cli_parser: argparse.ArgumentParser, flag_name: str, default_v
 
 def parse_args_and_run() -> None:
   parser = argparse.ArgumentParser(description="Multilinter")
+  parser.add_argument(
+    "--base_path",
+    type=str,
+    default=".",
+    help="The base path to run linters from (recursively). "
+         "The default is the current directory.",
+  )
   parser.add_argument(
     "--ref_branch",
     type=str,
@@ -414,17 +421,23 @@ def parse_args_and_run() -> None:
     default_val=False,
     help_str="Also pull lfs files from git. Requires installing git-lfs",
   )
-
   parser.add_argument(
     "--linters_config",
     type=str,
-    default="lint_all/all_linters.yaml",
+    default="all_linters.yaml",
     help="YAML configurtaion of all linters that may be used",
-  )
+  )  
   initial_flags = parser.parse_known_args()[0]
+  if not path.isdir(initial_flags.base_path):
+    print(f"{RED}Error: base path {initial_flags.base_path} not found{ENDC}")
+    sys.exit(1)    
+  if not path.isfile(initial_flags.linters_config):
+    print(f"{RED}Error: linters config file {initial_flags.linters_config} not found{ENDC}")
+    sys.exit(1)
   all_linters_parsed = load_linters(initial_flags.linters_config)
   if not all_linters_parsed:
-    raise ValueError("No linters found")
+    print(f"{RED}No linters found in {initial_flags.linters_config}{ENDC}")
+    sys.exit(1)
   for linter in all_linters_parsed:
     add_bool_flag(cli_parser=parser, flag_name=linter.name, default_val=linter.run_by_default, help_str=f"Run {linter.name}")
   global GLOBAL_FLAGS
@@ -439,4 +452,4 @@ def parse_args_and_run() -> None:
   if missing_linters > 0:
     print(f"--- {RED}Missing {missing_linters} linters{ENDC}")
     sys.exit(1)      
-  main(used_linters)
+  main(used_linters, initial_flags.base_path)

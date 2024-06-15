@@ -16,6 +16,9 @@
     # - "pylintrc"
   extensions:
     - ".py"
+  excluded_paths:
+    - "yapi/uploader/lib/"
+    - "ansible/"
 - name: "pylint_permissive"
   cmd:
     - "pylint"
