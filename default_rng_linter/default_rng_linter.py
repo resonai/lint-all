@@ -1,3 +1,4 @@
+# An example for a pylint plugin that checks for unseeded default_rng() calls
 from astroid import nodes
 from typing import TYPE_CHECKING
 
