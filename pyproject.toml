@@ -1,0 +1,33 @@
+[project]
+name = "lint_all"
+version = "0.1.1"
+description = "A meta linter to run all linters"
+dependencies = [
+        "gitdb",
+        "GitPython",
+        "pyyaml",]
+requires-python = ">=3.8"
+readme = "README.md"
+
+[build-system]
+requires = ["setuptools", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[tool.setuptools]
+include-package-data = true
+
+[tool.setuptools.packages.find]
+where = ["src"]
+
+[tool.setuptools.package-data]
+"lint_all" = ["all_linters.yaml"]
+
+[[project.authors]]
+name = "Shir Granot Peled"
+email = "shirpeled+lintall@gmail.com"
+
+[project.scripts]
+lint_all = "lint_all.lint_all:parse_args_and_run"
+
+[project.license]
+text = "Apache-2.0"
