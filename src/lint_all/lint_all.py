@@ -1,6 +1,6 @@
 #!/usr/bin/python
 # -*- coding: utf-8 -*-
-# Copyright 2020 Resonai Ltd. | by Shir Peled
+# Copyright 2020 Resonai Ltd. | by Shir Granot Peled
 """
 Run linters on the diff from git
 """
@@ -17,8 +17,6 @@ import gitdb
 import yaml
 from git import Repo
 
-from lint_all import __name__ as pkg_name
-
 WHITE = "\u001b[97;1m"
 YELLOW = "\u001b[93;1m"
 RED = "\u001b[91;1m"
@@ -26,16 +24,7 @@ GREEN = "\u001b[92;1m"
 CYAN = "\u001b[96;1m"
 ENDC = "\u001b[0m"
 
-REQUIRED_PIP = (
-  "cpplint,mypy,pyenchant,pylint,types-mock,types-protobuf,"
-  "types-redis,types-requests,types-setuptools,types-six,"
-  "types-pyyaml"
-)
-
-MYPY_IGNORE = ['error: "Type[Flags]" has no attribute', "error: Source file found twice under different module names"]
-
 GLOBAL_FLAGS = argparse.Namespace()
-
 
 @dataclass
 class Linter:
@@ -266,7 +255,7 @@ def filter_types_and_folders(linters: list[Linter], file_list: list[str], base_p
   files = []
   for fname in file_list:
     should_append = False
-    if fname.startswith(base_path):
+    if fname.startswith(base_path) or base_path == ".":
       for linter in linters:
         should_append |= fname.endswith(tuple(linter.extensions)) and not fname.startswith(tuple(linter.excluded_paths))
       if should_append:
@@ -284,14 +273,13 @@ def main(linters: list[Linter], base_path: str):
     changed_files = []
     if GLOBAL_FLAGS.check_all_files:
       changed_files = [str(x[1].path) for x in repo.index.iter_blobs()]
-    else:
+    else:      
       changed_files = [item.a_path for item in repo.index.diff(GLOBAL_FLAGS.ref_branch)]
       if not GLOBAL_FLAGS.ignore_uncommitted_or_staged:
         modified = git_modified_and_staged(repo)
         if len(modified) > 0:
           print(f"{YELLOW}You have uncommitted changes to tracked files.\n" f"{ENDC}")
-        changed_files = list(set(changed_files + modified))
-      changed_files = [x for x in changed_files if git_exists(repo, repo.head.object.hexsha, x)]
+        changed_files = list(set(changed_files + modified))      
     changed_files = sorted(filter_types_and_folders(linters, changed_files, base_path))
   except gitdb.exc.BadName:
     print(f"{RED}Branch {GLOBAL_FLAGS.ref_branch} not found{ENDC}")
@@ -309,7 +297,7 @@ def main(linters: list[Linter], base_path: str):
       f"{WHITE}Running {len(linters)} linters "
       f'({", ".join([x.name for x in linters])}) on '
       f"{len(changed_files)} {files_str} against branch "
-      f"{GLOBAL_FLAGS.ref_branch}.{ENDC}:\n{changed_files_str}"
+      f"{GLOBAL_FLAGS.ref_branch}{ENDC}:\n{changed_files_str}"
     )
     tmp_dir = ""
     if not GLOBAL_FLAGS.report_old_issues:
@@ -377,54 +365,56 @@ def main(linters: list[Linter], base_path: str):
 
 def add_bool_flag(cli_parser: argparse.ArgumentParser, flag_name: str, default_val: bool, help_str: str):
   feature_parser = cli_parser.add_mutually_exclusive_group(required=False)
-  feature_parser.add_argument(f"--{flag_name}", dest=f"{flag_name}", action="store_true", help=help_str)
-  feature_parser.add_argument(f"--no{flag_name}", dest=f"{flag_name}", action="store_false")
-  cli_parser.set_defaults(**{flag_name: default_val})
+  unhyphenated_flag_name = flag_name.replace("-", "_")
+  feature_parser.add_argument(f"--{flag_name}", dest=unhyphenated_flag_name, action="store_true", help=help_str)
+  feature_parser.add_argument(f"--no{flag_name}", dest=unhyphenated_flag_name, action="store_false")
+  cli_parser.set_defaults(**{unhyphenated_flag_name: default_val})
 
 
 def parse_args_and_run() -> None:
   parser = argparse.ArgumentParser(description="Multilinter")
   parser.add_argument(
-    "--base_path",
+    "--base-path",
     type=str,
     default=".",
     help="The base path to run linters from (recursively). "
          "The default is the current directory.",
   )
   parser.add_argument(
-    "--ref_branch",
+    "--ref-branch",
     type=str,
     default="origin/main",
     help="Reference branch against which the current branch is compared",
   )
   add_bool_flag(
     cli_parser=parser,
-    flag_name="check_all_files",
+    flag_name="check-all-files",
     default_val=False,
     help_str="Run with all files. If false, runs only on diff from ref_branch",
   )
   add_bool_flag(
     cli_parser=parser,
-    flag_name="report_old_issues",
+    flag_name="report-old-issues",
     default_val=False,
     help_str="Also include old issues in the report (if not set - ignores old issues).",
   )
   add_bool_flag(
     cli_parser=parser,
-    flag_name="ignore_uncommitted_or_staged",
+    flag_name="ignore-uncommitted-or-staged",
     default_val=False,
     help_str="Ignore files with uncommitted or staged changes.",
   )
   add_bool_flag(
     cli_parser=parser,
-    flag_name="use_git_lfs",
+    flag_name="use-git-lfs",
     default_val=False,
     help_str="Also pull lfs files from git. Requires installing git-lfs",
   )
   parser.add_argument(
-    "--linters_config",
+    "--linters-config",
     type=str,
     default="",
+    required=True,
     help="YAML configurtaion of all linters that may be used",
   )  
   initial_flags = parser.parse_known_args()[0]
@@ -433,7 +423,7 @@ def parse_args_and_run() -> None:
     sys.exit(1)    
   if not path.isfile(initial_flags.linters_config):
     print(f"{RED}Error: linters config file {initial_flags.linters_config} not found{ENDC}")
-    print(f"You can find a sample file at {pkg_resources.files(pkg_name)}/all_linters.yaml")
+    print(f"You can find a sample file at {pkg_resources.files('lint_all')}/all_linters.yaml")
     sys.exit(1)
   all_linters_parsed = load_linters(initial_flags.linters_config)
   if not all_linters_parsed:
