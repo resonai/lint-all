@@ -1,0 +1,51 @@
+- name: "mypy"
+  cmd:
+    - "mypy"
+    - "--config-file"
+    - "mypy.ini"
+  extensions:
+    - ".py"
+  ignored_issues:
+    - "error: \"Type[Flags]\" has no attribute"
+    - "error: Source file found twice under different module names"
+  run_by_default: false
+- name: "pylint"
+  cmd:
+    - "pylint"
+    # - "--rcfile"
+    # - "pylintrc"
+  extensions:
+    - ".py"
+  excluded_paths:
+    - "yapi/uploader/lib/"
+    - "ansible/"
+- name: "pylint_permissive"
+  cmd:
+    - "pylint"
+    - "--rcfile"
+    - "pylintrc_permissive"
+  extensions:
+    - ".py"
+  run_by_default: false
+- name: "cpplint"
+  cmd:
+    - "cpplint"
+  extensions:
+    - ".cc"
+    - ".h"
+  use_stderr: true
+  run_by_default: false
+- name: "golint"
+  cmd:
+    - "golint"
+  extensions:
+    - ".go"
+  run_by_default: false
+- name: "helmlint"
+  cmd:
+    - "python3"
+    - "helm_lint.py"
+  extensions:
+    - ".yaml"
+  use_stderr: true
+  run_by_default: false

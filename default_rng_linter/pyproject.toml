@@ -1,0 +1,11 @@
+[project]
+name = "default_rng_linter"
+version = "0.1.0"
+description = "Pylint plugin to catach usage of default_rng_linter with no seed"
+dependencies = ['pylint', 'astroid']
+requires-python = ">=3.8"
+[[project.authors]]
+name = "Shir Granot Peled"
+email = "shirpeled+lintall@gmail.com"
+[project.license]
+text = "Apache-2.0"
