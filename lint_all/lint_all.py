@@ -424,7 +424,7 @@ def parse_args_and_run() -> None:
   parser.add_argument(
     "--linters_config",
     type=str,
-    default="all_linters.yaml",
+    default="",
     help="YAML configurtaion of all linters that may be used",
   )  
   initial_flags = parser.parse_known_args()[0]
@@ -433,6 +433,7 @@ def parse_args_and_run() -> None:
     sys.exit(1)    
   if not path.isfile(initial_flags.linters_config):
     print(f"{RED}Error: linters config file {initial_flags.linters_config} not found{ENDC}")
+    print(f"You can find a sample file at {pkg_resources.files(pkg_name)}/all_linters.yaml")
     sys.exit(1)
   all_linters_parsed = load_linters(initial_flags.linters_config)
   if not all_linters_parsed:
