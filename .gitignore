@@ -19,3 +19,5 @@ workspace.code-workspace
 venv/**
 lint_all/build/**
 **/*egg-info/**
+**/dist/**
+**/build/**
